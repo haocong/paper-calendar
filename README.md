@@ -2,6 +2,7 @@
 
 ### Preset
 Install `polyserve` using `npm install -g polyserve` command.
+Install dependencies using `bower install`, if you haven't install bower using `npm install -g bower` first.
 
 ### Instruction
 Use `polyserve` command under the root of this directory.
