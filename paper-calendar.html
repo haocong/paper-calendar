@@ -1,0 +1,643 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!-- Iron elements -->
+<link rel="import" href="../iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="../iron-media-query/iron-media-query.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-meta/iron-meta.html">
+
+<!-- Neon elements -->
+<link rel="import" href="../neon-animation/neon-shared-element-animatable-behavior.html">
+<link rel="import" href="../neon-animation/neon-animated-pages.html">
+<link rel="import" href="../neon-animation/neon-animatable.html">
+<link rel="import" href="../neon-animation/neon-animations.html">
+
+<!-- Paper elements -->
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-button/paper-button.html">
+
+<!-- Paper Calendar -->
+<link rel="import" href="paper-calendar-fonts.html">
+<link rel="import" href="paper-calendar-weeks.html">
+<link rel="import" href="paper-calendar-years.html">
+<link rel="import" href="paper-date-utils.html">
+
+<!-- 
+An element presenting a material-designed calendar.
+@element paper-calendar
+@demo demo/index.html
+-->
+
+<dom-module id="paper-calendar">
+
+  <style>
+
+    :host {
+      display: inline-block;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'RobotoDraft', sans-serif;
+      font-size: 12px;
+      line-height: 24px;
+      background: var(--paper-calendar-background, white);
+      color: var(--paper-text-color, --primary-text-color);
+    }
+
+    :host * {
+     cursor: default;
+    }
+
+    paper-material {
+      z-index: 0;
+      border-radius: 2px;
+    }
+
+    #selectedWeekdayHeader {
+      color: #FFF;
+      height: 36px;
+      background: var(--paper-calendar-header-color);
+      overflow: hidden;
+      -webkit-transition: all .3s;
+      transition: all .3s;
+      border-top-left-radius: 2px;
+      border-top-right-radius: 2px;
+    }
+
+    .selectedWeekday {
+      font-size: 14px;
+      line-height: 36px;
+      text-align: center;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    #selectedDateHeader {
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.05);
+      color: #FFF;
+      padding: 12px 0;
+      -webkit-transition: all .3s;
+      transition: all .3s;
+    }
+
+    :host #selectedDateHeader {
+      background: var(--paper-calendar-accent);
+    }
+
+    #selectedDateHeader > div {
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .selectedWeekday {
+      font-size: 14px;
+      line-height: 36px;
+      text-align: center;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    #selectedMonth,
+    #selectedYear {
+      height: 30px;
+    }
+
+    #selectedDay {
+      height: 60px;
+    }
+
+    .selectedMonth,
+    .selectedYear {
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 30px;
+      letter-spacing: 0.05em;
+    }
+
+    .selectedDay {
+      font-size: 60px;
+      line-height: 60px;
+    }
+
+    .selectedYear {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    #wrapper[horizontal] #selectedMonth,
+    #wrapper[horizontal] #selectedYear {
+      height: 50px;
+    }
+
+    #wrapper[horizontal] #selectedDay {
+      height: 90px;
+    }
+
+    #wrapper[horizontal] .selectedMonth,
+    #wrapper[horizontal] .selectedYear {
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 50px;
+      letter-spacing: 0.05em;
+    }
+
+    #wrapper[horizontal] .selectedDay {
+      font-size: 86px;
+      line-height: 90px;
+    }
+
+    #views {
+      height: 300px;
+      width: 276px;
+      overflow: hidden;
+    }
+
+    #calendar-selection {
+      width: 276px;
+    }
+
+    .slideup,
+    ::shadow .slideup {
+      transition: all .4s cubic-bezier(0.390, 0.575, 0.135, 0.995);
+      -webkit-transition: all .4s cubic-bezier(0.390, 0.575, 0.135, 0.995);
+      position: absolute;
+      -webkit-transform: translateY(100%);
+      transform: translateY(100%);
+      top: 0;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      opacity: 0;
+      z-index: 0;
+    }
+
+    .slideup.in,
+    ::shadow .slideup.in {
+      -webkit-transform: translateY(0px);
+      transform: translateY(0px);
+      z-index: 1;
+      opacity: 0.9;
+    }
+
+    .slideup.out,
+    ::shadow .slideup.out {
+      -webkit-transform: translateY(-100%);
+      transform: translateY(-100%);
+      z-index: 0;
+      opacity: 0;
+    }
+
+    .slideleft,
+    ::shadow .slideleft {
+      transition: all .3s cubic-bezier(0.390, 0.575, 0.135, 0.995);
+      -webkit-transition: all .3s cubic-bezier(0.390, 0.575, 0.135, 0.995);
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      -webkit-transform: translateX(100%);
+      transform: translateX(100%);
+    }
+
+    .slideleft.in,
+    ::shadow .slideleft.in {
+      -webkit-transform: translateX(0);
+      transform: translateX(0);
+    }
+
+    .slideleft.out,
+    ::shadow .slideleft.out {
+      -webkit-transform: translateX(-100%);
+      transform: translateX(-100%);
+    }
+
+  </style>
+
+  <template>
+
+    <iron-media-query query="(max-height: 360px)" query-matches="{{landscape}}"></iron-media-query>
+
+    <paper-date-utils id="dateUtils"></paper-date-utils>
+
+    <paper-material elevation="{{elevation}}">
+
+      <div id="wrapper" class="layout" horizontal$="{{landscape}}" vertical$="{{!landscape}}">
+        <div id="calendar-selection" hidden$="{{!header}}">
+          <div id="selectedWeekdayHeader" class="layout horizontal">
+            <div class="relative flex" id="selectedWeekday">
+              <div class="selectedWeekday slideup">{{selectedWeekday}}</div>
+            </div>
+          </div>
+
+          <div id="selectedDateHeader" class="layout vertical center center-justified">
+            <div id="selectedMonth">
+              <div class="selectedMonth slideup" style="text-transform: uppercase">{{selectedMonth}}</div>
+            </div>
+            <div id="selectedDay">
+              <div class="selectedDay slideup" view="dateView" on-tap="_viewSelectAction">{{selectedDay}}</div>
+            </div>
+            <div id="selectedYear">
+              <div class="selectedYear slideup" view="yearView" on-tap="_viewSelectAction">{{selectedYear}}</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="calendar" class="layout vertical">
+          <neon-animated-pages id="views" selected="{{selectedView}}" attr-for-selected="view">
+            <neon-animatable view="dateView" id="date">
+              <paper-calendar-weeks
+                date="{{viewingDate}}"
+                selected-date="{{selectedDate}}"
+                on-paper-calendar-day-selected="_dateSelectAction"
+                on-paper-calendar-view-selected="_viewSelectAction">
+              </paper-calendar-weeks>
+            </neon-animatable>
+
+            <neon-animatable view="yearView" id="year">
+              <paper-calendar-years
+                on-paper-calendar-year-selected="_yearSelectAction"
+                viewing-year="{{viewingYear}}">
+              </paper-calendar-years>
+            </neon-animatable>
+          </neon-animated-pages>
+        </div>
+      </div>
+
+    </paper-material>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+    is: 'paper-calendar',
+
+    properties: {
+      elevation: String,
+      viewingDate: {
+        type: String,
+        observer: '_viewingDateChanged'
+      },
+      selectedDate: {
+        type: String,
+        observer: '_selectedDateChanged'
+      },
+      header: {
+        type: Boolean,
+        value: false
+      },
+      selectedView: {
+        type: String,
+        value: 'dateView'
+      },
+      lang: {
+        type: String,
+        value: 'en'
+      }
+    },
+
+    _getFullMonth: function(d) {
+      return (d && d.getTime) ? this.locale[this.lang].monthNames[d.getMonth()] : null;
+    },
+
+    _getShortMonth: function(d) {
+      return (d && d.getTime) ? this.locale[this.lang].shortMonthNames[d.getMonth()] : null;
+    },
+
+    _getDayOfWeek: function(d) {
+      return (d && d.getTime) ? this.locale[this.lang].dayNames[d.getDay()] : null;
+    },
+
+    _getShortDayNames: function() {
+      return this.locale[this.lang].shortDayNames;
+    },
+
+    created: function() {
+      this.locale = {
+        'en': {
+          monthNames: [
+              'January',
+              'February',
+              'March',
+              'April',
+              'May',
+              'June',
+              'July',
+              'August',
+              'September',
+              'October',
+              'November',
+              'December'
+          ],
+
+          shortMonthNames: [
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec'
+          ],
+
+          dayNames: [
+              'Sunday',
+              'Monday',
+              'Tuesday',
+              'Wednesday',
+              'Thursday',
+              'Friday',
+              'Saturday'
+          ],
+
+          shortDayNames: [
+              'S',
+              'M',
+              'T',
+              'W',
+              'T',
+              'F',
+              'S'
+          ]
+        },
+        'es': {
+          monthNames: [
+              'Enero',
+              'Febrero',
+              'Marzo',
+              'Abril',
+              'Mayo',
+              'Junio',
+              'Julio',
+              'Agosto',
+              'Septiembre',
+              'Octubre',
+              'Noviembre',
+              'Diciembre'
+          ],
+
+          shortMonthNames: [
+              'Ene',
+              'Feb',
+              'Mar',
+              'Abr',
+              'May',
+              'Jun',
+              'Jul',
+              'Ago',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dic'
+          ],
+
+          dayNames: [
+              'Domingo',
+              'Lunes',
+              'Martes',
+              'Miércoles',
+              'Jueves',
+              'Viernes',
+              'Sábado'
+          ],
+
+          shortDayNames: [
+              'D',
+              'L',
+              'M',
+              'X',
+              'J',
+              'V',
+              'S'
+          ]
+        },
+        'zh-CN': {
+          monthNames: [
+              '一月',
+              '二月',
+              '三月',
+              '四月',
+              '五月',
+              '六月',
+              '七月',
+              '八月',
+              '九月',
+              '十月',
+              '十一月',
+              '十二月'
+          ],
+
+          shortMonthNames: [
+              '一',
+              '二',
+              '三',
+              '四',
+              '五',
+              '六',
+              '七',
+              '八',
+              '九',
+              '十',
+              '十一',
+              '十二'
+          ],
+
+          dayNames: [
+              '星期天',
+              '星期一',
+              '星期二',
+              '星期三',
+              '星期四',
+              '星期五',
+              '星期六'
+          ],
+
+          shortDayNames: [
+              '日',
+              '一',
+              '二',
+              '三',
+              '四',
+              '五',
+              '六'
+          ]
+        }
+      };
+    },
+
+    ready: function() {
+      this.dateUtils = this.$.dateUtils;
+
+      if (!this.selectedDate) {
+        this.selectedDate = new Date();
+      }
+      else {
+        this.selectedDate = new Date(this.selectedDate);
+      }
+
+      this.viewingDate = this.viewingDate || new Date(this.selectedDate);
+      this.viewingDate.setDate(1);
+      this.nowDate = new Date();
+
+      this.$.date.behaviors = [this.$.date.behaviors, Polymer.NeonSharedElementAnimatableBehavior];
+      this.$.year.behaviors = [this.$.year.behaviors, Polymer.NeonSharedElementAnimatableBehavior];
+
+      this.$.date.animationConfig = {
+        'entry':[{
+          name: 'fade-in-animation',
+          node: this.$.date,
+          timing: {
+            delay: 200
+          }
+        }],
+
+        'exit': [{
+          name: 'hero-animation',
+          id: 'hero',
+          fromPage: this.$.date
+        }, {
+          name: 'fade-out-animation',
+          node: this.$.date,
+          timing: {
+            duration: 0
+          }
+        }]
+      };
+
+      this.$.year.animationConfig = {
+        'entry': [{
+          name: 'hero-animation',
+          id: 'hero',
+          toPage: this.$.year
+        }, {
+          name: 'fade-in-animation',
+          node: this.$.year
+        }],
+
+        'exit': [{
+          name: 'fade-out-animation',
+          node: this.$.year
+        }]
+      };
+
+      this.$.date.sharedElements = {
+        'hero': this.$.date.querySelector('.hero')
+      };
+    },
+
+    _selectedDateChanged: function(newdate, olddate) {
+      if (olddate && !olddate.getTime){
+        olddate = new Date(olddate);
+      }
+
+      if (newdate && !newdate.getTime) {
+        newdate = new Date(newdate);
+        if (!newdate.getTime){
+          return;
+        }
+        this.selectedDate = newdate;
+      }
+
+      this.reverseAnimation = olddate && olddate.getTime() > newdate.getTime();
+      this._updateSelectedDateProps(newdate, olddate);
+      this.fire('paper-calendar-date-selected', {date: this.selectedDate});
+    },
+
+    _updateSelectedDateProps: function(newdate, olddate) {
+      if (this._getDayOfWeek(newdate) !== this._getDayOfWeek(olddate)) {
+        this._renderNode(this.$$('.selectedWeekday'), this.reverseAnimation);
+      }
+      if (this._getShortMonth(newdate) !== this._getShortMonth(olddate)) {
+        this._renderNode(this.$$('.selectedMonth'), this.reverseAnimation);
+      }
+      if (!olddate || newdate.getFullYear() !== olddate.getFullYear()) {
+        this._renderNode(this.$$('.selectedYear'), this.reverseAnimation);
+      }
+      if (!olddate || newdate.getDate() !== olddate.getDate()) {
+        this._renderNode(this.$$('.selectedDay'), this.reverseAnimation);
+      }
+
+      this.async(function() {
+        this.selectedWeekday = this._getDayOfWeek(this.selectedDate);
+        this.selectedMonth = this._getShortMonth(this.selectedDate);
+        this.selectedYear = this.selectedDate.getFullYear();
+        this.selectedDay = this.selectedDate.getDate();
+      });
+    },
+
+    _viewingDateChanged: function() {
+      this.viewingYear = this.viewingDate.getFullYear();
+      this.async(function() {
+        this.$.year.sharedElements = {
+          'hero': this.$.year.querySelector('.hero')
+        };
+      });
+    },
+
+    _dateSelectAction: function(e) {
+      this.selectedDate = new Date(e.detail.day);
+    },
+
+    _viewSelectAction: function() {
+      this.selectedView = 'yearView';
+    },
+
+    _yearSelectAction: function(e) {
+      var year = e.detail.year;
+
+      this.disablePropertyAnimations = true;
+      this.viewingDate = new Date(year, this.viewingDate.getMonth(), 1);
+
+      this.async(function(){
+        this.selectedView = 'dateView';
+        this.disablePropertyAnimations = false;
+      });
+    },
+
+    _renderNode: function(element, reverse) {
+      if (this.disablePropertyAnimations){
+        return;
+      }
+      var delayRemovalTime = 400;
+      var el = element;
+      var elClone = el.cloneNode(true);
+
+      el._originalTransition = element.style.transition;
+      el.style.transition = 'none';
+      el.parentElement.appendChild(elClone);
+
+      if (!reverse) {
+        el.classList.remove('in'); // back to start position immediately
+      } else {
+        el.classList.add('out'); // go to end position immediately
+      }
+
+      this.async(function() {
+        el.style.transition = el._originalTransition;
+        if (!reverse) {
+          elClone.classList.add('out'); // animate to end position
+        } else {
+          elClone.classList.remove('in'); // animate to start position
+          el.classList.remove('out'); // animate to start position
+        }
+        el.classList.add('in');
+      }, 50);
+
+      this.async(function() {
+        try {
+          el.parentElement.removeChild(elClone);
+        } catch (err) {
+          console.log(err.message);
+        }
+      }, delayRemovalTime);
+    }
+  });
+
+</script>
