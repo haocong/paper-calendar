@@ -1,4 +1,5 @@
 # paper-calendar
+Forked from [d-calendar](https://github.com/subpopular/d-calendar), migrated to Polymer 1.0 with Simplified Chinese language support added.
 
 ### Preset
 Install `polyserve` using `npm install -g polyserve` command.
