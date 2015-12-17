@@ -242,10 +242,11 @@ An element presenting a material-designed calendar.
           </div>
         </div>
 
-        <div id="calendar" class="layout vertical">
+        <div id="calendar" class="layout vertical" on-track="_swipeX">
           <neon-animated-pages id="views" selected="{{selectedView}}" attr-for-selected="view">
             <neon-animatable view="dateView" id="date">
               <paper-calendar-weeks
+                id="weeks"
                 date="{{viewingDate}}"
                 selected-date="{{selectedDate}}"
                 on-paper-calendar-day-selected="_dateSelectAction"
@@ -637,6 +638,23 @@ An element presenting a material-designed calendar.
           console.log(err.message);
         }
       }, delayRemovalTime);
+    },
+    _isXSwipe: function(start, end) {
+      var totalTouchTime = end.timeStamp - start.timeStamp;
+      var dx = end.detail.dx;
+      return totalTouchTime < 500 && Math.abs(dx) > 40
+    },
+    _swipeX: function(e) {
+      switch(e.detail.state) {
+        case 'start':
+          this._trackStartEvent = e;
+          break;
+        case 'end':
+          if (this._isXSwipe(this._trackStartEvent, e)) {
+            e.detail.dx < 0 ? this.$.weeks.next() : this.$.weeks.prev();
+          }
+          break;
+      }
     }
   });
 
