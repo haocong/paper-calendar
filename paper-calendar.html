@@ -653,7 +653,7 @@ An element presenting a material-designed calendar.
           break;
         case 'end':
           if (this._isXSwipe(this._trackStartEvent, e)) {
-            e.detail.dx < 0 ? this.$.weeks.next() : this.$.weeks.prev();
+            e.detail.dx < 0 ? this.nextMonth() : this.prevMonth();
           }
           break;
       }
