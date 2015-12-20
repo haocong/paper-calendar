@@ -249,6 +249,8 @@ An element presenting a material-designed calendar.
                 id="weeks"
                 date="{{viewingDate}}"
                 selected-date="{{selectedDate}}"
+                on-go-prev-month="prevMonth"
+                on-go-next-month="nextMonth"
                 on-paper-calendar-day-selected="_dateSelectAction"
                 on-paper-calendar-view-selected="_viewSelectAction">
               </paper-calendar-weeks>
@@ -655,6 +657,12 @@ An element presenting a material-designed calendar.
           }
           break;
       }
+    },
+    prevMonth: function() {
+      this.viewingDate = this.dateUtils.addMonths(this.viewingDate, -1);
+    },
+    nextMonth: function() {
+      this.viewingDate = this.dateUtils.addMonths(this.viewingDate, 1);
     }
   });
 

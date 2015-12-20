@@ -110,11 +110,11 @@
     <paper-date-utils id="dateUtils"></paper-date-utils>
 
     <div id="header" class="layout horizontal">
-      <paper-icon-button icon="chevron-left" on-tap="prev" noink></paper-icon-button>
+      <paper-icon-button icon="chevron-left" on-tap="_onPrev" noink></paper-icon-button>
       <div class="flex relative" id="viewingMonthYear">
         <h4 class="viewingMonthYear slideleft">{{viewingMonth}} <span view="yearView" on-tap="_viewSelect" class="hero">{{viewingYear}}</span></h4>
       </div>
-      <paper-icon-button icon="chevron-right" on-tap="next" noink></paper-icon-button>
+      <paper-icon-button icon="chevron-right" on-tap="_onNext" noink></paper-icon-button>
     </div>
 
     <div class="weekday layout horizontal center">
@@ -229,12 +229,12 @@
       this.fire('paper-calendar-view-selected');
     },
 
-    prev: function() {
-      this.date = this.dateUtils.addMonths(this.date, -1);
+    _onPrev: function() {
+      this.fire('go-prev-month');
     },
 
-    next: function() {
-      this.date = this.dateUtils.addMonths(this.date, 1);
+    _onNext: function() {
+      this.fire('go-next-month');
     },
 
     _keyup: function(e){
