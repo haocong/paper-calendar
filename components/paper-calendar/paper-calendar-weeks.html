@@ -166,7 +166,9 @@
     ready: function() {
       this.dateUtils = this.$.dateUtils;
       this.nowDate = new Date();
-      this.weekdays = this.dataHost._getShortDayNames();
+      this.async(function() {
+        this.weekdays = this.dataHost._getShortDayNames();
+      }.bind(this));
 
       addEventListener('keyup', this._keyup.bind(this));
     },
@@ -240,10 +242,10 @@
     _keyup: function(e){
       switch (e.keyCode) {
         case 37:
-          this.prev();
+          this._onPrev();
           break;
         case 39:
-          this.next();
+          this._onNext();
           break;
       }
     }

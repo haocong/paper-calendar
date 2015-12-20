@@ -295,26 +295,26 @@ An element presenting a material-designed calendar.
         type: String,
         value: 'dateView'
       },
-      lang: {
+      language: {
         type: String,
         value: 'en'
       }
     },
 
     _getFullMonth: function(d) {
-      return (d && d.getTime) ? this.locale[this.lang].monthNames[d.getMonth()] : null;
+      return (d && d.getTime) ? this.locale[this.language].monthNames[d.getMonth()] : null;
     },
 
     _getShortMonth: function(d) {
-      return (d && d.getTime) ? this.locale[this.lang].shortMonthNames[d.getMonth()] : null;
+      return (d && d.getTime) ? this.locale[this.language].shortMonthNames[d.getMonth()] : null;
     },
 
     _getDayOfWeek: function(d) {
-      return (d && d.getTime) ? this.locale[this.lang].dayNames[d.getDay()] : null;
+      return (d && d.getTime) ? this.locale[this.language].dayNames[d.getDay()] : null;
     },
 
     _getShortDayNames: function() {
-      return this.locale[this.lang].shortDayNames;
+      return this.locale[this.language].shortDayNames;
     },
 
     created: function() {
