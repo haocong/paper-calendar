@@ -1,0 +1,252 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="paper-date-utils.html">
+
+<dom-module id="paper-calendar-weeks">
+
+  <style>
+
+    #header {
+      position: relative;
+      overflow: hidden;
+      padding: 0 9px;
+      margin-bottom: 0px;
+    }
+
+    #header paper-icon-button {
+      margin: 4px 0;
+      transition: all .1s;
+    }
+
+    #header paper-icon-button:active {
+      color: var(--paper-calendar-header-color);
+    }
+
+    #viewingMonthYear {
+      overflow: hidden;
+    }
+
+    .viewingMonthYear {
+      margin: 0;
+      font-size: 16px;
+      line-height: 48px;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+
+    .weekday {
+      margin: 0 12px;
+    }
+
+    .weekday-name {
+      font-weight: 500;
+      width: 36px;
+      text-align: center;
+      color: rgba(0,0,0,0.3);
+    }
+
+    #days {
+      position: relative;
+      overflow: hidden;
+      height: 216px;
+      z-index: 0;
+    }
+
+    .weeks {
+      padding: 0 12px;
+      box-sizing: border-box;
+    }
+
+    .day {
+      box-sizing: border-box;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      position: relative;
+    }
+
+    .day.currentday {
+      font-weight: 500;
+      color: var(--paper-calendar-header-color);
+    }
+
+    .day:after {
+      content: '';
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      bottom: 3px;
+      left: 3px;
+      background: var(--paper-calendar-header-color);
+      z-index: 0;
+      -webkit-transform: scale(0);
+      transform: scale(0);
+      opacity: 0;
+      transition: all .2s cubic-bezier(0.175, 0.885, 0.320, 1.275);
+      -webkit-transition: all .2s cubic-bezier(0.175, 0.885, 0.320, 1.275);
+    }
+
+    .day[selected]:after {
+      -webkit-transform: scale(1);
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .day div {
+      z-index: 1;
+      transition: all .2s;
+      -webkit-transition: all .2s;
+    }
+
+    .day[selected] div {
+      color: #FFF;
+      font-weight: 600;
+    }
+
+  </style>
+
+  <template>
+
+    <paper-date-utils id="dateUtils"></paper-date-utils>
+
+    <div id="header" class="layout horizontal">
+      <paper-icon-button icon="chevron-left" on-tap="_onPrev" noink></paper-icon-button>
+      <div class="flex relative" id="viewingMonthYear">
+        <h4 class="viewingMonthYear slideleft">{{viewingMonth}} <span view="yearView" on-tap="_viewSelect" class="hero">{{viewingYear}}</span></h4>
+      </div>
+      <paper-icon-button icon="chevron-right" on-tap="_onNext" noink></paper-icon-button>
+    </div>
+
+    <div class="weekday layout horizontal center">
+      <template is="dom-repeat" items="{{weekdays}}" as="weekday">
+        <div class="weekday-name">{{weekday}}</div>
+      </template>
+    </div>
+
+    <div id="days">
+      <div class="weeks slideleft">
+        <div class="layout horizontal wrap">
+          <template is="dom-repeat" items="[[weeks]]" as="week" index-as="w">
+            <template is="dom-repeat" items="[[week]]" as="date" index-as="d">
+              <div
+                class$="layout horizontal center-justified day[[date.curClass]][[date.offClass]]"
+                date$="[[date.fullDate]]"
+                selected$="[[date.selected]]"
+                on-tap="_selectDay">
+                <div class="layout horizontal center">[[date.shortDate]]</div>
+              </div>
+            </template>
+          </template>
+        </div>
+      </div>
+    </div>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'paper-calendar-weeks',
+
+    properties: {
+      date: {
+        type: String,
+        observer: '_dateChanged'
+      },
+      selectedDate: String
+    },
+
+    observers: [
+      '_weeksChanged(date, selectedDate)'
+    ],
+
+    ready: function() {
+      this.dateUtils = this.$.dateUtils;
+      this.nowDate = new Date();
+      this.weekdays = this.dataHost._getShortDayNames();
+
+      addEventListener('keyup', this._keyup.bind(this));
+    },
+
+    _isSameDay: function(d1, d2) {
+      return this.dateUtils.isEqualDate(d1, d2);
+    },
+
+    _isSameMonth: function(d1, d2) {
+      return this.dateUtils.isEqualMonth(d1, d2);
+    },
+
+    _weeksChanged: function(date, selected) {
+      this.async(function() {
+        var weeksFull = this.dateUtils.getWeekArray(date);
+        this.weeks = this._enhanceWeeks(weeksFull);
+      });
+    },
+
+    _dateChanged: function(newDate, oldDate) {
+      // if the month & year hasn't changed, no need to update
+      if (this.dateUtils.isEqualMonth(oldDate, newDate)) {
+        return;
+      }
+
+      this.reverseAnimation = oldDate && oldDate.getTime() > newDate.getTime();
+      this.dataHost._renderNode(this.$.days.querySelector('.weeks'), this.reverseAnimation);
+      this.dataHost._renderNode(this.$$('.viewingMonthYear'), this.reverseAnimation);
+
+      this.async(function() {
+        this.viewingMonth = this.dataHost._getFullMonth(this.date);
+        this.viewingYear = this.date.getFullYear();
+      });
+    },
+
+    _enhanceWeeks: function(full) {
+      var self = this;
+      return full.map(function(week) {
+        if (!week || week === null) {
+          return null;
+        }
+        return week.map(function(day) {
+          return {
+            fullDate: day,
+            shortDate: day ? day.getDate() : null,
+            offClass: !self._isSameMonth(day, self.date) ? ' offday':'',
+            curClass: self._isSameDay(day, self.nowDate) ? ' currentday' : '',
+            selected: self._isSameDay(day, self.selectedDate)
+          };
+        });
+      });
+    },
+
+    _selectDay: function(e) {
+      var selectedDate = e.target.hasAttribute('date') ? e.target.getAttribute('date') : e.target.parentNode.getAttribute('date');
+      this.fire('paper-calendar-day-selected', {day: selectedDate});
+    },
+
+    _viewSelect: function() {
+      this.fire('paper-calendar-view-selected');
+    },
+
+    _onPrev: function() {
+      this.fire('go-prev-month');
+    },
+
+    _onNext: function() {
+      this.fire('go-next-month');
+    },
+
+    _keyup: function(e){
+      switch (e.keyCode) {
+        case 37:
+          this.prev();
+          break;
+        case 39:
+          this.next();
+          break;
+      }
+    }
+  });
+
+</script>

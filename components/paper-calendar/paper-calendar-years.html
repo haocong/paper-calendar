@@ -1,0 +1,95 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="paper-date-utils.html">
+
+<dom-module id="paper-calendar-years">
+
+  <style>
+
+    #years {
+      box-sizing: border-box;
+      height: 300px;
+      max-width: 100%;
+      padding: 6px;
+      overflow: auto;
+    }
+
+    .year {
+      width: 33.3%;
+      text-align: center;
+      font-size: 14px;
+      line-height: 36px;
+    }
+
+    .year paper-button {
+      display: block;
+      width: 100%;
+      margin: 0;
+    }
+
+    paper-button {
+      color: var(--paper-text-color);
+    }
+
+  </style>
+
+  <template>
+
+    <paper-date-utils id="dateUtils"></paper-date-utils>
+
+    <div id="years" class="layout horizontal wrap">
+      <template is="dom-repeat" items="{{_yearsArray}}" as="year" index-as="i">
+        <div class$="layout horizontal center center-justified year{{_isHero(i, startYear, viewingYear)}}">
+          <paper-button year$="{{_computedYear(i, startYear)}}" on-tap="_yearSelected">{{_computedYear(i, startYear)}}</paper-button>
+        </div>
+      </template>
+    </div>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'paper-calendar-years',
+
+    properties: {
+      startYear: String,
+      viewingYear: String,
+      years: {
+        type: Number,
+        observer: '_yearsChanged'
+      },
+      _yearsArray: {
+        type: Object,
+        value: function() {
+          return [];
+        }
+      }
+    },
+
+    ready: function(){
+      var now = this.viewingYear || (new Date()).getFullYear();
+      this.startYear = this.startYear || now - 2;
+      this.years = this.years || 15;
+    },
+
+    _yearsChanged: function() {
+      this._yearsArray = Array(this.years);
+    },
+
+    _yearSelected: function(e) {
+      this.fire('paper-calendar-year-selected', {year: e.target.getAttribute('year')});
+    },
+
+    _isHero: function(i, start, viewing) {
+      return i + start === viewing ? ' hero' : '';
+    },
+
+    _computedYear: function(i, start) {
+      return i + start;
+    }
+  });
+
+</script>
